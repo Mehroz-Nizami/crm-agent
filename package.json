@@ -1,0 +1,18 @@
+{
+  "name": "crm-agent",
+  "version": "0.1.0",
+  "description": "CRM Agent - shared data/API layer for the AI Agent Suite (Lead Qualifier, Sales, Voice, Support, Internal Workflow all read/write through this)",
+  "main": "server.js",
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.19.2",
+    "express-session": "^1.18.0",
+    "pg": "^8.12.0",
+    "bcryptjs": "^2.4.3"
+  }
+}

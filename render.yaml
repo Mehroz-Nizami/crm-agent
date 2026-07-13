@@ -1,0 +1,14 @@
+services:
+  - type: web
+    name: crm-agent-demo
+    runtime: node
+    plan: free
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: DATABASE_URL
+        sync: false # paste a NEW Neon connection string here — don't reuse dispatchai/roastradar's project
+      - key: SESSION_SECRET
+        generateValue: true
+      - key: DEMO_MODE
+        value: "true" # portfolio deploy: open access, demo data auto-resets. Remove for client/product deploys.

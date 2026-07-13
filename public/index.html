@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>CRM Agent — Dashboard</title>
+<style>
+  body { font-family: -apple-system, Segoe UI, sans-serif; background: #0f1115; color: #e8e8e8; margin: 0; padding: 24px; }
+  h1 { font-size: 20px; margin: 0 0 4px; }
+  .sub { color: #999; font-size: 13px; margin-bottom: 24px; }
+  h2 { font-size: 15px; color: #c9a24b; margin: 28px 0 10px; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid #262a33; }
+  th { color: #999; font-weight: 500; }
+  .pill { padding: 2px 8px; border-radius: 999px; font-size: 11px; background: #262a33; }
+  .topbar { display: flex; justify-content: space-between; align-items: center; }
+  button, .btn { padding: 6px 12px; border-radius: 6px; border: none; background: #c9a24b; color: #14151a; font-weight: 600; cursor: pointer; font-size: 13px; text-decoration: none; }
+  .exportRow { display: flex; gap: 8px; margin-top: 8px; }
+  #logoutBtn { background: #333; color: #e8e8e8; }
+</style>
+</head>
+<body>
+<div class="topbar">
+  <div>
+    <h1>CRM Agent</h1>
+    <div class="sub">Shared data layer — every AI Agent Suite agent reads/writes through this.</div>
+  </div>
+  <button id="logoutBtn">Log out</button>
+</div>
+
+<h2>Contacts</h2>
+<table id="contactsTable"><thead><tr><th>Name</th><th>Company</th><th>Status</th><th>Score</th><th>Source</th></tr></thead><tbody></tbody></table>
+
+<h2>Deals</h2>
+<table id="dealsTable"><thead><tr><th>Title</th><th>Stage</th><th>Value</th><th>Owner</th></tr></thead><tbody></tbody></table>
+
+<h2>Recent interactions (all agents)</h2>
+<table id="interactionsTable"><thead><tr><th>When</th><th>Agent</th><th>Channel</th><th>Summary</th></tr></thead><tbody></tbody></table>
+
+<h2>Agent action log</h2>
+<table id="actionsTable"><thead><tr><th>When</th><th>Agent</th><th>Action</th><th>Target</th></tr></thead><tbody></tbody></table>
+
+<div class="exportRow">
+  <a class="btn" href="/api/export/contacts.csv">Export contacts CSV</a>
+  <a class="btn" href="/api/export/deals.csv">Export deals CSV</a>
+  <a class="btn" href="/api/export/interactions.csv">Export interactions CSV</a>
+</div>
+
+<script>
+async function loadAll() {
+  const [contacts, deals, interactions, actions] = await Promise.all([
+    fetch('/api/contacts').then(r => r.json()),
+    fetch('/api/deals').then(r => r.json()),
+    fetch('/api/interactions').then(r => r.json()),
+    fetch('/api/agent-actions').then(r => r.json()),
+  ]);
+
+  document.querySelector('#contactsTable tbody').innerHTML = contacts.map(c => `
+    <tr><td>${c.name}</td><td>${c.company || ''}</td><td><span class="pill">${c.status}</span></td><td>${c.lead_score ?? ''}</td><td>${c.source || ''}</td></tr>
+  `).join('') || '<tr><td colspan="5">No contacts yet.</td></tr>';
+
+  document.querySelector('#dealsTable tbody').innerHTML = deals.map(d => `
+    <tr><td>${d.title}</td><td><span class="pill">${d.stage}</span></td><td>$${(d.value_cents/100).toFixed(2)}</td><td>${d.owner || ''}</td></tr>
+  `).join('') || '<tr><td colspan="4">No deals yet.</td></tr>';
+
+  document.querySelector('#interactionsTable tbody').innerHTML = interactions.slice(0,20).map(i => `
+    <tr><td>${new Date(i.created_at).toLocaleString()}</td><td><span class="pill">${i.agent}</span></td><td>${i.channel}</td><td>${i.summary}</td></tr>
+  `).join('') || '<tr><td colspan="4">No interactions logged yet.</td></tr>';
+
+  document.querySelector('#actionsTable tbody').innerHTML = actions.slice(0,20).map(a => `
+    <tr><td>${new Date(a.created_at).toLocaleString()}</td><td><span class="pill">${a.agent}</span></td><td>${a.action}</td><td>${a.target_type} ${a.target_id || ''}</td></tr>
+  `).join('') || '<tr><td colspan="4">No agent actions logged yet — this fills in once the other 5 agents start calling the API.</td></tr>';
+}
+
+document.getElementById('logoutBtn').addEventListener('click', async () => {
+  await fetch('/api/logout', { method: 'POST' });
+  window.location.href = '/login.html';
+});
+
+loadAll();
+</script>
+</body>
+</html>

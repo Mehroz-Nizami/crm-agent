@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>CRM Agent — Login</title>
+<style>
+  body { font-family: -apple-system, Segoe UI, sans-serif; background: #0f1115; color: #e8e8e8; display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0; }
+  form { background: #1a1d24; padding: 32px; border-radius: 10px; width: 300px; box-shadow: 0 8px 30px rgba(0,0,0,0.4); }
+  h1 { font-size: 18px; margin: 0 0 20px; }
+  input { width: 100%; box-sizing: border-box; padding: 10px; margin-bottom: 12px; border-radius: 6px; border: 1px solid #333; background: #0f1115; color: #e8e8e8; }
+  button { width: 100%; padding: 10px; border-radius: 6px; border: none; background: #c9a24b; color: #14151a; font-weight: 600; cursor: pointer; }
+  button:hover { opacity: 0.9; }
+  #err { color: #ff6b6b; font-size: 13px; margin-bottom: 10px; min-height: 16px; }
+</style>
+</head>
+<body>
+<form id="loginForm">
+  <h1>CRM Agent</h1>
+  <div id="err"></div>
+  <input type="email" id="email" placeholder="Email" value="demo@auberix.test" required />
+  <input type="password" id="password" placeholder="Password" value="demo1234" required />
+  <button type="submit">Log in</button>
+</form>
+<script>
+  document.getElementById('loginForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const email = document.getElementById('email').value;
+    const password = document.getElementById('password').value;
+    const res = await fetch('/api/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password }),
+    });
+    if (res.ok) {
+      window.location.href = '/';
+    } else {
+      const data = await res.json().catch(() => ({}));
+      document.getElementById('err').textContent = data.error || 'Login failed';
+    }
+  });
+</script>
+</body>
+</html>
