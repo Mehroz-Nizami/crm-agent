@@ -1,42 +1,94 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<title>CRM Agent — Login</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CRM Agent — Live demo</title>
 <style>
-  body { font-family: -apple-system, Segoe UI, sans-serif; background: #0f1115; color: #e8e8e8; display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0; }
-  form { background: #1a1d24; padding: 32px; border-radius: 10px; width: 300px; box-shadow: 0 8px 30px rgba(0,0,0,0.4); }
-  h1 { font-size: 18px; margin: 0 0 20px; }
-  input { width: 100%; box-sizing: border-box; padding: 10px; margin-bottom: 12px; border-radius: 6px; border: 1px solid #333; background: #0f1115; color: #e8e8e8; }
-  button { width: 100%; padding: 10px; border-radius: 6px; border: none; background: #c9a24b; color: #14151a; font-weight: 600; cursor: pointer; }
-  button:hover { opacity: 0.9; }
-  #err { color: #ff6b6b; font-size: 13px; margin-bottom: 10px; min-height: 16px; }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, 'Segoe UI', Inter, sans-serif; background: #0A0A0C; color: #EDEEF2;
+    display: flex; align-items: center; justify-content: center; min-height: 100vh;
+    background-image: radial-gradient(circle, rgba(110,123,255,0.10) 1px, transparent 1px);
+    background-size: 28px 28px;
+  }
+  .card {
+    background: #101014; border: 1px solid #232329; border-radius: 16px;
+    padding: 44px 40px; width: 440px; max-width: calc(100vw - 32px); text-align: center;
+  }
+  .pill {
+    display: inline-block; font-family: ui-monospace, Consolas, monospace; font-size: 11px;
+    color: #3FB950; background: rgba(63,185,80,0.12); border: 1px solid rgba(63,185,80,0.35);
+    border-radius: 999px; padding: 4px 12px; margin-bottom: 20px; letter-spacing: 0.05em;
+  }
+  h1 { font-size: 26px; letter-spacing: -0.02em; margin-bottom: 8px; }
+  h1 .dot { color: #6E7BFF; }
+  .tag { color: #9CA0AA; font-size: 14px; margin-bottom: 24px; }
+  ul { list-style: none; text-align: left; margin: 0 auto 28px; display: inline-block; }
+  li { color: #9CA0AA; font-size: 13.5px; padding: 5px 0 5px 24px; position: relative; }
+  li::before { content: '✓'; position: absolute; left: 0; color: #3FB950; font-weight: 700; }
+  button {
+    width: 100%; padding: 14px; border-radius: 10px; border: none; cursor: pointer;
+    background: #EDEEF2; color: #0A0A0C; font-size: 15px; font-weight: 600;
+    transition: background 0.15s ease, transform 0.15s ease;
+  }
+  button:hover { background: #FFFFFF; transform: translateY(-1px); }
+  .note { color: #62666E; font-size: 12px; margin-top: 16px; font-family: ui-monospace, Consolas, monospace; }
+  #classicForm { display: none; text-align: left; }
+  #classicForm input {
+    width: 100%; padding: 11px 14px; margin-bottom: 12px; border-radius: 8px;
+    border: 1px solid #232329; background: #0A0A0C; color: #EDEEF2; font-size: 14px;
+  }
+  #err { color: #E24B4A; font-size: 13px; min-height: 18px; margin-bottom: 6px; }
 </style>
 </head>
 <body>
-<form id="loginForm">
-  <h1>CRM Agent</h1>
-  <div id="err"></div>
-  <input type="email" id="email" placeholder="Email" value="demo@auberix.test" required />
-  <input type="password" id="password" placeholder="Password" value="demo1234" required />
-  <button type="submit">Log in</button>
-</form>
+<div class="card">
+  <span class="pill">● LIVE DEMO</span>
+  <h1>CRM Agent<span class="dot">.</span></h1>
+  <p class="tag">The shared brain for a suite of AI agents — every AI action audited, every client isolated.</p>
+  <div id="demoBlock">
+    <ul>
+      <li>A working B2B pipeline: 18 contacts, 11 deals</li>
+      <li>Run the Lead Qualifier agent yourself, live</li>
+      <li>Every AI write attributed in the audit trail</li>
+    </ul>
+    <button id="enterBtn">Enter live demo →</button>
+    <p class="note">no signup · no credentials · demo data resets automatically</p>
+    <p class="note">built &amp; operated by Auberix</p>
+  </div>
+  <form id="classicForm">
+    <div id="err"></div>
+    <input type="email" id="email" placeholder="Email" required />
+    <input type="password" id="password" placeholder="Password" required />
+    <button type="submit">Log in</button>
+  </form>
+</div>
 <script>
-  document.getElementById('loginForm').addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const email = document.getElementById('email').value;
-    const password = document.getElementById('password').value;
-    const res = await fetch('/api/login', {
+  const enter = async (body) => {
+    const r = await fetch('/api/login', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, password }),
+      body: JSON.stringify(body || {}),
     });
-    if (res.ok) {
-      window.location.href = '/';
-    } else {
-      const data = await res.json().catch(() => ({}));
-      document.getElementById('err').textContent = data.error || 'Login failed';
+    if (r.ok) window.location.href = '/';
+    return r;
+  };
+  fetch('/api/config').then((r) => r.json()).then((cfg) => {
+    if (!cfg.demo) {
+      document.getElementById('demoBlock').style.display = 'none';
+      document.querySelector('.pill').style.display = 'none';
+      document.getElementById('classicForm').style.display = 'block';
     }
+  }).catch(() => {});
+  document.getElementById('enterBtn').addEventListener('click', () => enter({}));
+  document.getElementById('classicForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const r = await enter({
+      email: document.getElementById('email').value,
+      password: document.getElementById('password').value,
+    });
+    if (!r.ok) document.getElementById('err').textContent = 'Invalid email or password.';
   });
 </script>
 </body>

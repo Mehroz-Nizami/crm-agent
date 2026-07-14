@@ -1,77 +1,333 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<title>CRM Agent — Dashboard</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CRM Agent — Demo Co workspace</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
-  body { font-family: -apple-system, Segoe UI, sans-serif; background: #0f1115; color: #e8e8e8; margin: 0; padding: 24px; }
-  h1 { font-size: 20px; margin: 0 0 4px; }
-  .sub { color: #999; font-size: 13px; margin-bottom: 24px; }
-  h2 { font-size: 15px; color: #c9a24b; margin: 28px 0 10px; }
-  table { width: 100%; border-collapse: collapse; font-size: 13px; }
-  th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid #262a33; }
-  th { color: #999; font-weight: 500; }
-  .pill { padding: 2px 8px; border-radius: 999px; font-size: 11px; background: #262a33; }
-  .topbar { display: flex; justify-content: space-between; align-items: center; }
-  button, .btn { padding: 6px 12px; border-radius: 6px; border: none; background: #c9a24b; color: #14151a; font-weight: 600; cursor: pointer; font-size: 13px; text-decoration: none; }
-  .exportRow { display: flex; gap: 8px; margin-top: 8px; }
-  #logoutBtn { background: #333; color: #e8e8e8; }
+  :root {
+    --bg: #0A0A0C; --surface: #101014; --surface2: #16161B; --border: #232329;
+    --accent: #6E7BFF; --green: #3FB950; --amber: #EF9F27; --red: #E24B4A; --cyan: #22D3EE;
+    --text: #EDEEF2; --muted: #9CA0AA; --faint: #62666E;
+    --mono: 'JetBrains Mono', ui-monospace, Consolas, monospace;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: var(--bg); color: var(--text); font-family: 'Inter', sans-serif; font-size: 14px; }
+  .topbar {
+    display: flex; align-items: center; justify-content: space-between; gap: 12px;
+    padding: 14px 22px; border-bottom: 1px solid var(--border); position: sticky; top: 0;
+    background: rgba(10,10,12,0.92); backdrop-filter: blur(10px); z-index: 20; flex-wrap: wrap;
+  }
+  .brand { font-weight: 700; font-size: 16px; }
+  .brand .dot { color: var(--accent); }
+  .ws-pill {
+    font-family: var(--mono); font-size: 11px; color: var(--muted);
+    border: 1px solid var(--border); border-radius: 999px; padding: 3px 10px; margin-left: 10px;
+  }
+  .actions { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+  .btn {
+    padding: 8px 16px; border-radius: 8px; border: 1px solid transparent; cursor: pointer;
+    font-size: 13px; font-weight: 600; font-family: 'Inter', sans-serif; transition: all 0.15s ease;
+  }
+  .btn-primary { background: #EDEEF2; color: #0A0A0C; }
+  .btn-primary:hover { background: #fff; }
+  .btn-primary:disabled { opacity: 0.5; cursor: wait; }
+  .btn-ghost { background: transparent; color: var(--muted); border-color: var(--border); }
+  .btn-ghost:hover { color: var(--text); border-color: #33333C; }
+  .wrap { max-width: 1240px; margin: 0 auto; padding: 22px; }
+  .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 12px; margin-bottom: 22px; }
+  .stat { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 16px 18px; }
+  .stat .v { font-family: var(--mono); font-size: 20px; font-weight: 500; }
+  .stat .l { color: var(--faint); font-size: 11.5px; margin-top: 2px; }
+  .tabs { display: flex; gap: 4px; border-bottom: 1px solid var(--border); margin-bottom: 18px; flex-wrap: wrap; }
+  .tab {
+    padding: 9px 16px; cursor: pointer; color: var(--muted); font-size: 13.5px; font-weight: 500;
+    border-bottom: 2px solid transparent; margin-bottom: -1px; background: none; border-top: none; border-left: none; border-right: none;
+    font-family: 'Inter', sans-serif;
+  }
+  .tab.active { color: var(--text); border-bottom-color: var(--accent); }
+  .panel { display: none; }
+  .panel.active { display: block; }
+  .board { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+  .col h3 { font-family: var(--mono); font-size: 11px; font-weight: 500; color: var(--faint); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 10px; }
+  .col h3 .sum { color: var(--muted); float: right; }
+  .deal {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 9px;
+    padding: 12px 14px; margin-bottom: 10px;
+  }
+  .deal .t { font-size: 12.5px; font-weight: 500; margin-bottom: 6px; }
+  .deal .m { display: flex; justify-content: space-between; align-items: center; }
+  .deal .val { font-family: var(--mono); font-size: 13px; color: var(--text); }
+  .owner { font-family: var(--mono); font-size: 10px; border-radius: 4px; padding: 2px 6px; }
+  .owner.agent { color: var(--accent); background: rgba(110,123,255,0.12); }
+  .owner.human { color: var(--muted); background: var(--surface2); }
+  .deal.won { border-color: rgba(63,185,80,0.4); }
+  .deal.lost { opacity: 0.55; }
+  table { width: 100%; border-collapse: collapse; }
+  th { font-family: var(--mono); font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--faint); text-align: left; padding: 8px 12px; border-bottom: 1px solid var(--border); font-weight: 500; }
+  td { padding: 11px 12px; border-bottom: 1px solid var(--border); font-size: 13px; vertical-align: middle; }
+  tr.row { cursor: pointer; }
+  tr.row:hover td { background: var(--surface); }
+  .co { color: var(--faint); font-size: 12px; }
+  .chip { font-family: var(--mono); font-size: 10.5px; color: var(--muted); background: var(--surface2); border: 1px solid var(--border); border-radius: 4px; padding: 2px 7px; }
+  .status { font-size: 11px; font-weight: 600; border-radius: 999px; padding: 3px 10px; }
+  .status.new { color: var(--cyan); background: rgba(34,211,238,0.1); }
+  .status.contacted { color: var(--amber); background: rgba(239,159,39,0.1); }
+  .status.qualified { color: var(--accent); background: rgba(110,123,255,0.12); }
+  .status.customer { color: var(--green); background: rgba(63,185,80,0.12); }
+  .status.disqualified { color: var(--faint); background: var(--surface2); }
+  .score { font-family: var(--mono); font-size: 12px; font-weight: 500; border-radius: 6px; padding: 3px 9px; display: inline-block; min-width: 34px; text-align: center; }
+  .score.hi { color: var(--green); background: rgba(63,185,80,0.12); }
+  .score.mid { color: var(--amber); background: rgba(239,159,39,0.12); }
+  .score.lo { color: var(--red); background: rgba(226,75,74,0.12); }
+  .score.none { color: var(--faint); background: var(--surface2); }
+  .score.flash { animation: flash 1.6s ease; }
+  @keyframes flash { 0% { box-shadow: 0 0 0 3px rgba(110,123,255,0.6); } 100% { box-shadow: none; } }
+  .feed .item { display: flex; gap: 12px; padding: 12px 4px; border-bottom: 1px solid var(--border); }
+  .aicon {
+    font-family: var(--mono); font-size: 10px; border-radius: 5px; padding: 3px 8px; height: fit-content;
+    white-space: nowrap; margin-top: 2px;
+  }
+  .ag-lead_qualifier { color: var(--accent); background: rgba(110,123,255,0.12); }
+  .ag-sales { color: var(--cyan); background: rgba(34,211,238,0.1); }
+  .ag-support { color: var(--green); background: rgba(63,185,80,0.12); }
+  .ag-voice { color: var(--amber); background: rgba(239,159,39,0.12); }
+  .ag-workflow { color: var(--muted); background: var(--surface2); }
+  .feed .s { font-size: 13px; }
+  .feed .meta { font-family: var(--mono); font-size: 11px; color: var(--faint); margin-top: 3px; }
+  .detail-json { font-family: var(--mono); font-size: 11px; color: var(--muted); }
+  .drawer {
+    position: fixed; top: 0; right: -460px; width: 440px; max-width: 95vw; height: 100vh;
+    background: var(--surface); border-left: 1px solid var(--border); z-index: 40;
+    transition: right 0.25s ease; overflow-y: auto; padding: 24px;
+  }
+  .drawer.open { right: 0; }
+  .drawer h2 { font-size: 18px; margin-bottom: 2px; }
+  .drawer .co2 { color: var(--muted); font-size: 13px; margin-bottom: 14px; }
+  .drawer .close { position: absolute; top: 16px; right: 16px; background: none; border: none; color: var(--faint); font-size: 18px; cursor: pointer; }
+  .drawer h4 { font-family: var(--mono); font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--faint); margin: 18px 0 8px; font-weight: 500; }
+  .drawer .reason { font-size: 12.5px; color: var(--muted); background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px; }
+  .tl .titem { padding: 9px 0 9px 16px; border-left: 2px solid var(--border); margin-left: 4px; position: relative; }
+  .tl .titem::before { content: ''; position: absolute; left: -5px; top: 14px; width: 8px; height: 8px; border-radius: 50%; background: var(--accent); }
+  .tl .s { font-size: 12.5px; }
+  .tl .meta { font-family: var(--mono); font-size: 10.5px; color: var(--faint); margin-top: 2px; }
+  .toast {
+    position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(80px);
+    background: var(--surface2); border: 1px solid rgba(110,123,255,0.5); color: var(--text);
+    border-radius: 10px; padding: 12px 20px; font-size: 13.5px; z-index: 60; opacity: 0;
+    transition: all 0.3s ease; box-shadow: 0 10px 32px rgba(0,0,0,0.5);
+  }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+  .demo-note { font-family: var(--mono); font-size: 11px; color: var(--faint); }
+  .overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 30; display: none; }
+  .overlay.show { display: block; }
+  @media (max-width: 900px) { .board { grid-template-columns: 1fr 1fr; } }
+  @media (max-width: 560px) { .board { grid-template-columns: 1fr; } .wrap { padding: 14px; } }
 </style>
 </head>
 <body>
+
 <div class="topbar">
-  <div>
-    <h1>CRM Agent</h1>
-    <div class="sub">Shared data layer — every AI Agent Suite agent reads/writes through this.</div>
+  <div><span class="brand">crm-agent<span class="dot">.</span></span><span class="ws-pill">Demo Co workspace</span></div>
+  <div class="actions">
+    <span class="demo-note">demo data · resets automatically</span>
+    <button class="btn btn-primary" id="runLq">▶ Run Lead Qualifier</button>
+    <button class="btn btn-ghost" id="exportBtn">Export CSV</button>
+    <button class="btn btn-ghost" id="exitBtn">Exit demo</button>
   </div>
-  <button id="logoutBtn">Log out</button>
 </div>
 
-<h2>Contacts</h2>
-<table id="contactsTable"><thead><tr><th>Name</th><th>Company</th><th>Status</th><th>Score</th><th>Source</th></tr></thead><tbody></tbody></table>
-
-<h2>Deals</h2>
-<table id="dealsTable"><thead><tr><th>Title</th><th>Stage</th><th>Value</th><th>Owner</th></tr></thead><tbody></tbody></table>
-
-<h2>Recent interactions (all agents)</h2>
-<table id="interactionsTable"><thead><tr><th>When</th><th>Agent</th><th>Channel</th><th>Summary</th></tr></thead><tbody></tbody></table>
-
-<h2>Agent action log</h2>
-<table id="actionsTable"><thead><tr><th>When</th><th>Agent</th><th>Action</th><th>Target</th></tr></thead><tbody></tbody></table>
-
-<div class="exportRow">
-  <a class="btn" href="/api/export/contacts.csv">Export contacts CSV</a>
-  <a class="btn" href="/api/export/deals.csv">Export deals CSV</a>
-  <a class="btn" href="/api/export/interactions.csv">Export interactions CSV</a>
+<div class="wrap">
+  <div class="stats" id="stats"></div>
+  <div class="tabs">
+    <button class="tab active" data-p="pipeline">Pipeline</button>
+    <button class="tab" data-p="contacts">Contacts</button>
+    <button class="tab" data-p="activity">Agent activity</button>
+    <button class="tab" data-p="audit">Audit trail</button>
+  </div>
+  <div class="panel active" id="p-pipeline"><div class="board" id="board"></div></div>
+  <div class="panel" id="p-contacts">
+    <table>
+      <thead><tr><th>Contact</th><th>Source</th><th>Status</th><th>Lead score</th><th>Added</th></tr></thead>
+      <tbody id="ctbody"></tbody>
+    </table>
+  </div>
+  <div class="panel" id="p-activity"><div class="feed" id="feed"></div></div>
+  <div class="panel" id="p-audit">
+    <table>
+      <thead><tr><th>Agent</th><th>Action</th><th>Target</th><th>Detail</th><th>When</th></tr></thead>
+      <tbody id="atbody"></tbody>
+    </table>
+  </div>
 </div>
+
+<div class="overlay" id="overlay"></div>
+<div class="drawer" id="drawer">
+  <button class="close" id="drawerClose">✕</button>
+  <div id="drawerBody"></div>
+</div>
+<div class="toast" id="toast"></div>
 
 <script>
-async function loadAll() {
-  const [contacts, deals, interactions, actions] = await Promise.all([
-    fetch('/api/contacts').then(r => r.json()),
-    fetch('/api/deals').then(r => r.json()),
-    fetch('/api/interactions').then(r => r.json()),
-    fetch('/api/agent-actions').then(r => r.json()),
-  ]);
+const $ = (id) => document.getElementById(id);
+let contacts = [], deals = [], interactions = [], actions = [];
 
-  document.querySelector('#contactsTable tbody').innerHTML = contacts.map(c => `
-    <tr><td>${c.name}</td><td>${c.company || ''}</td><td><span class="pill">${c.status}</span></td><td>${c.lead_score ?? ''}</td><td>${c.source || ''}</td></tr>
-  `).join('') || '<tr><td colspan="5">No contacts yet.</td></tr>';
+const money = (cents) => '$' + Math.round(cents / 100).toLocaleString();
+const rel = (iso) => {
+  const s = (Date.now() - new Date(iso).getTime()) / 1000;
+  if (s < 3600) return Math.max(1, Math.round(s / 60)) + 'm ago';
+  if (s < 86400) return Math.round(s / 3600) + 'h ago';
+  return Math.round(s / 86400) + 'd ago';
+};
+const esc = (t) => (t || '').replace(/[&<>"]/g, (c) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const scoreClass = (n) => n == null ? 'none' : n >= 75 ? 'hi' : n >= 45 ? 'mid' : 'lo';
 
-  document.querySelector('#dealsTable tbody').innerHTML = deals.map(d => `
-    <tr><td>${d.title}</td><td><span class="pill">${d.stage}</span></td><td>$${(d.value_cents/100).toFixed(2)}</td><td>${d.owner || ''}</td></tr>
-  `).join('') || '<tr><td colspan="4">No deals yet.</td></tr>';
-
-  document.querySelector('#interactionsTable tbody').innerHTML = interactions.slice(0,20).map(i => `
-    <tr><td>${new Date(i.created_at).toLocaleString()}</td><td><span class="pill">${i.agent}</span></td><td>${i.channel}</td><td>${i.summary}</td></tr>
-  `).join('') || '<tr><td colspan="4">No interactions logged yet.</td></tr>';
-
-  document.querySelector('#actionsTable tbody').innerHTML = actions.slice(0,20).map(a => `
-    <tr><td>${new Date(a.created_at).toLocaleString()}</td><td><span class="pill">${a.agent}</span></td><td>${a.action}</td><td>${a.target_type} ${a.target_id || ''}</td></tr>
-  `).join('') || '<tr><td colspan="4">No agent actions logged yet — this fills in once the other 5 agents start calling the API.</td></tr>';
+async function api(path, opts) {
+  const r = await fetch(path, opts);
+  if (r.status === 401) { window.location.href = '/login.html'; throw new Error('unauthed'); }
+  return r.json();
 }
 
-document.getElementById('logoutBtn').addEventListener('click', async () => {
+async function loadAll() {
+  [contacts, deals, interactions, actions] = await Promise.all([
+    api('/api/contacts'), api('/api/deals'), api('/api/interactions'), api('/api/agent-actions'),
+  ]);
+  render();
+}
+
+function render() {
+  const open = deals.filter((d) => !['won', 'lost'].includes(d.stage));
+  const won = deals.filter((d) => d.stage === 'won');
+  const scored = contacts.filter((c) => c.lead_score != null);
+  const weekAgo = Date.now() - 7 * 86400000;
+  const recentActions = actions.filter((a) => new Date(a.created_at).getTime() > weekAgo);
+  $('stats').innerHTML = [
+    [money(open.reduce((s, d) => s + d.value_cents, 0)), 'open pipeline'],
+    [money(won.reduce((s, d) => s + d.value_cents, 0)), 'closed won'],
+    [contacts.length, 'contacts'],
+    [scored.length ? Math.round(scored.reduce((s, c) => s + c.lead_score, 0) / scored.length) : '—', 'avg lead score'],
+    [recentActions.length, 'agent actions · 7d'],
+  ].map(([v, l]) => `<div class="stat"><div class="v">${v}</div><div class="l">${l}</div></div>`).join('');
+
+  const stages = [['contacted', 'Contacted'], ['qualified', 'Qualified'], ['proposal', 'Proposal'], ['closed', 'Closed']];
+  $('board').innerHTML = stages.map(([key, label]) => {
+    const list = key === 'closed' ? deals.filter((d) => ['won', 'lost'].includes(d.stage))
+      : deals.filter((d) => d.stage === key);
+    const sum = list.filter((d) => d.stage !== 'lost').reduce((s, d) => s + d.value_cents, 0);
+    return `<div class="col"><h3>${label} <span class="sum">${money(sum)}</span></h3>` +
+      list.map((d) => `
+        <div class="deal ${d.stage === 'won' ? 'won' : ''} ${d.stage === 'lost' ? 'lost' : ''}">
+          <div class="t">${esc(d.title)}</div>
+          <div class="m"><span class="val">${money(d.value_cents)}${d.stage === 'won' ? ' ✓' : d.stage === 'lost' ? ' ✕' : ''}</span>
+          <span class="owner ${d.owner && d.owner.startsWith('agent') ? 'agent' : 'human'}">${esc(d.owner || '—')}</span></div>
+        </div>`).join('') + '</div>';
+  }).join('');
+
+  $('ctbody').innerHTML = [...contacts]
+    .sort((a, b) => (b.lead_score ?? -1) - (a.lead_score ?? -1))
+    .map((c) => `
+      <tr class="row" data-id="${c.id}">
+        <td><strong>${esc(c.name)}</strong><br><span class="co">${esc(c.company || '')}</span></td>
+        <td><span class="chip">${esc(c.source || '—')}</span></td>
+        <td><span class="status ${esc(c.status)}">${esc(c.status)}</span></td>
+        <td><span class="score ${scoreClass(c.lead_score)}" data-score-id="${c.id}" title="${esc(c.lead_score_reason || 'Not scored yet — run the Lead Qualifier')}">${c.lead_score ?? '—'}</span></td>
+        <td class="co">${rel(c.created_at)}</td>
+      </tr>`).join('');
+
+  $('feed').innerHTML = interactions.map((i) => {
+    const c = contacts.find((x) => x.id === i.contact_id);
+    return `<div class="item">
+      <span class="aicon ag-${esc(i.agent)}">${esc(i.agent)}</span>
+      <div><div class="s">${esc(i.summary)}</div>
+      <div class="meta">${esc(i.channel)} · ${c ? esc(c.name) + ' · ' : ''}${rel(i.created_at)}</div></div>
+    </div>`;
+  }).join('');
+
+  $('atbody').innerHTML = actions.map((a) => {
+    const c = contacts.find((x) => x.id === a.target_id);
+    return `<tr>
+      <td><span class="aicon ag-${esc(a.agent)}">${esc(a.agent)}</span></td>
+      <td class="detail-json">${esc(a.action)}</td>
+      <td>${c ? esc(c.name) : '<span class="co">' + esc(a.target_type) + '</span>'}</td>
+      <td class="detail-json">${esc(JSON.stringify(a.detail || {}))}</td>
+      <td class="co">${rel(a.created_at)}</td>
+    </tr>`;
+  }).join('');
+
+  document.querySelectorAll('tr.row').forEach((tr) => {
+    tr.addEventListener('click', () => openDrawer(tr.dataset.id));
+  });
+}
+
+function openDrawer(id) {
+  const c = contacts.find((x) => x.id === id);
+  if (!c) return;
+  const cDeals = deals.filter((d) => d.contact_id === id);
+  const cInts = interactions.filter((i) => i.contact_id === id);
+  $('drawerBody').innerHTML = `
+    <h2>${esc(c.name)}</h2>
+    <div class="co2">${esc(c.company || '')} · ${esc(c.email || '')}</div>
+    <span class="status ${esc(c.status)}">${esc(c.status)}</span>
+    <span class="chip" style="margin-left:6px">${esc(c.source || '')}</span>
+    <h4>Lead score</h4>
+    <div><span class="score ${scoreClass(c.lead_score)}" style="font-size:15px;padding:5px 12px">${c.lead_score ?? 'not scored'}</span></div>
+    ${c.lead_score_reason ? `<div class="reason" style="margin-top:8px">${esc(c.lead_score_reason)}</div>` : ''}
+    ${cDeals.length ? '<h4>Deals</h4>' + cDeals.map((d) => `
+      <div class="deal ${d.stage === 'won' ? 'won' : ''} ${d.stage === 'lost' ? 'lost' : ''}" style="margin-bottom:8px">
+        <div class="t">${esc(d.title)}</div>
+        <div class="m"><span class="val">${money(d.value_cents)}</span><span class="chip">${esc(d.stage)}</span></div>
+      </div>`).join('') : ''}
+    <h4>Timeline</h4>
+    <div class="tl">${cInts.map((i) => `
+      <div class="titem"><div class="s">${esc(i.summary)}</div>
+      <div class="meta">${esc(i.agent)} · ${esc(i.channel)} · ${rel(i.created_at)}</div></div>`).join('') || '<span class="co">No interactions yet.</span>'}</div>
+  `;
+  $('drawer').classList.add('open');
+  $('overlay').classList.add('show');
+}
+const closeDrawer = () => { $('drawer').classList.remove('open'); $('overlay').classList.remove('show'); };
+$('drawerClose').addEventListener('click', closeDrawer);
+$('overlay').addEventListener('click', closeDrawer);
+
+document.querySelectorAll('.tab').forEach((t) => {
+  t.addEventListener('click', () => {
+    document.querySelectorAll('.tab').forEach((x) => x.classList.remove('active'));
+    document.querySelectorAll('.panel').forEach((x) => x.classList.remove('active'));
+    t.classList.add('active');
+    $('p-' + t.dataset.p).classList.add('active');
+  });
+});
+
+function toast(msg) {
+  $('toast').textContent = msg;
+  $('toast').classList.add('show');
+  setTimeout(() => $('toast').classList.remove('show'), 3500);
+}
+
+$('runLq').addEventListener('click', async () => {
+  const btn = $('runLq');
+  btn.disabled = true; btn.textContent = '… agent running';
+  try {
+    const out = await api('/api/agents/lead-qualifier/run', { method: 'POST' });
+    await loadAll();
+    if (out.scored === 0) {
+      toast('Lead Qualifier: every contact is already scored. Data resets periodically — come back for fresh leads.');
+    } else {
+      toast(`Lead Qualifier scored ${out.scored} contact${out.scored === 1 ? '' : 's'} — check the audit trail.`);
+      document.querySelectorAll('.tab')[1].click();
+      out.results.forEach((r) => {
+        const el = document.querySelector(`[data-score-id="${r.id}"]`);
+        if (el) el.classList.add('flash');
+      });
+    }
+  } catch (e) { toast('Agent run failed — try again.'); }
+  btn.disabled = false; btn.textContent = '▶ Run Lead Qualifier';
+});
+
+$('exportBtn').addEventListener('click', () => { window.location.href = '/api/export/contacts.csv'; });
+$('exitBtn').addEventListener('click', async () => {
   await fetch('/api/logout', { method: 'POST' });
   window.location.href = '/login.html';
 });

@@ -1,0 +1,92 @@
+// seed-data.js — demo tenant book of business. Consumed by db.js seedDemoTenant().
+// Times are expressed as "days ago" and converted at seed time, so the demo always
+// looks current no matter when it (re)seeds.
+
+const CONTACTS = [
+  { key: 'chen',      name: 'Jamie Chen',      email: 'jamie@chenconsulting.example',  company: 'Chen Consulting',        source: 'referral',      status: 'customer',     score: 94, reason: 'Referred by existing customer; signed within 3 weeks; expansion candidate', daysAgo: 27 },
+  { key: 'mendes',    name: 'Lucia Mendes',    email: 'lucia@mendesmedia.example',     company: 'Mendes Media',           source: 'linkedin',      status: 'customer',     score: 88, reason: 'High engagement across 6 touchpoints; clear pain (content ops); budget confirmed', daysAgo: 24 },
+  { key: 'whitfield', name: 'Sarah Whitfield', email: 'sarah@whitfieldlog.example',    company: 'Whitfield Logistics',    source: 'website_form',  status: 'qualified',    score: 86, reason: 'Inbound demo request; 40-truck fleet; replied within 2 hours; named a Q3 deadline', daysAgo: 12 },
+  { key: 'bell',      name: 'Marcus Bell',     email: 'marcus@bellharmon.example',     company: 'Bell & Harmon Legal',    source: 'referral',      status: 'qualified',    score: 91, reason: 'Referred by Chen Consulting; decision-maker; stated budget range on first call', daysAgo: 10 },
+  { key: 'tan',       name: 'Grace Tan',       email: 'grace@tanrobotics.example',     company: 'Tan Robotics',           source: 'webinar',       status: 'qualified',    score: 83, reason: 'Attended full webinar; asked implementation questions; 120-seat support team', daysAgo: 9 },
+  { key: 'okafor',    name: 'Tom Okafor',      email: 'tom@okaforfoods.example',       company: 'Okafor Foods',           source: 'webinar',       status: 'qualified',    score: 78, reason: 'Webinar attendee; multi-warehouse inventory pain; follow-up call booked', daysAgo: 8 },
+  { key: 'haddad',    name: 'Omar Haddad',     email: 'omar@haddadimports.example',    company: 'Haddad Imports',         source: 'referral',      status: 'qualified',    score: 74, reason: 'Referral; manual customs paperwork ~20h/week; evaluating two vendors', daysAgo: 7 },
+  { key: 'zahra',     name: 'Fatima Zahra',    email: 'fatima@zahraclinics.example',   company: 'Zahra Clinics',          source: 'webinar',       status: 'contacted',    score: 69, reason: 'Three-clinic group; no-show rate pain quantified; waiting on ops director', daysAgo: 6 },
+  { key: 'nair',      name: 'Priya Nair',      email: 'priya@nairsoft.example',        company: 'NairSoft',               source: 'linkedin',      status: 'contacted',    score: 62, reason: 'Engaged with outreach; white-label interest; company size unverified', daysAgo: 9 },
+  { key: 'ross',      name: 'Emily Ross',      email: 'emily@rossfield.example',       company: 'Ross & Field Accounting', source: 'cold_outreach', status: 'contacted',    score: 51, reason: 'Replied to second email; interest expressed but no timeline or budget yet', daysAgo: 5 },
+  { key: 'kowalski',  name: 'Dana Kowalski',   email: 'dana@kowalskidental.example',   company: 'Kowalski Dental Group',  source: 'cold_outreach', status: 'contacted',    score: 44, reason: 'Opens every email, never replies; single-location practice; low fit signal', daysAgo: 11 },
+  { key: 'sorensen',  name: 'Hank Sorensen',   email: 'hank@sorensenfarms.example',    company: 'Sorensen Farms',         source: 'cold_outreach', status: 'disqualified', score: 22, reason: 'Wrong vertical for current suite; revisit if agri module ships', daysAgo: 14 },
+  { key: 'petrova',   name: 'Nina Petrova',    email: 'nina@petrova.example',          company: 'Petrova Analytics',      source: 'linkedin',      status: 'disqualified', score: 18, reason: 'Student side-project; no budget; flagged after discovery call', daysAgo: 13 },
+  { key: 'rivera',    name: 'Alex Rivera',     email: 'alex@riverahvac.example',       company: 'Rivera HVAC',            source: 'website_form',  status: 'new',          score: null, reason: null, daysAgo: 1 },
+  { key: 'ortiz',     name: 'Liam Ortiz',      email: 'liam@ortizpm.example',          company: 'Ortiz Property Mgmt',    source: 'website_form',  status: 'new',          score: null, reason: null, daysAgo: 2 },
+  { key: 'hughes',    name: 'Victor Hughes',   email: 'victor@hughesauto.example',     company: 'Hughes Auto Group',      source: 'inbound_email', status: 'new',          score: null, reason: null, daysAgo: 1 },
+  { key: 'yamada',    name: 'Ken Yamada',      email: 'ken@yamadafab.example',         company: 'Yamada Fabrication',     source: 'website_form',  status: 'new',          score: null, reason: null, daysAgo: 3 },
+  { key: 'decker',    name: 'Rob Decker',      email: 'rob@deckerfreight.example',     company: 'Decker Freight',         source: 'inbound_email', status: 'new',          score: null, reason: null, daysAgo: 0 },
+];
+
+const DEALS = [
+  { contact: 'chen',      title: 'Chen Consulting — annual plan',            stage: 'won',       value: 480000,  owner: 'agent:sales', daysAgo: 21 },
+  { contact: 'mendes',    title: 'Mendes Media — content ops automation',    stage: 'won',       value: 264000,  owner: 'human:sam',   daysAgo: 18 },
+  { contact: 'whitfield', title: 'Whitfield Logistics — dispatch integration', stage: 'proposal', value: 720000, owner: 'agent:sales', daysAgo: 6 },
+  { contact: 'bell',      title: 'Bell & Harmon — client intake automation', stage: 'proposal',  value: 550000,  owner: 'human:sam',   daysAgo: 5 },
+  { contact: 'haddad',    title: 'Haddad Imports — customs docs automation', stage: 'proposal',  value: 330000,  owner: 'agent:sales', daysAgo: 4 },
+  { contact: 'tan',       title: 'Tan Robotics — support triage pilot',      stage: 'qualified', value: 210000,  owner: 'agent:sales', daysAgo: 5 },
+  { contact: 'okafor',    title: 'Okafor Foods — inventory alert rollout',   stage: 'qualified', value: 180000,  owner: 'human:sam',   daysAgo: 4 },
+  { contact: 'zahra',     title: 'Zahra Clinics — appointment recovery',     stage: 'contacted', value: 150000,  owner: 'agent:sales', daysAgo: 3 },
+  { contact: 'nair',      title: 'NairSoft — white-label evaluation',        stage: 'contacted', value: 90000,   owner: 'agent:sales', daysAgo: 6 },
+  { contact: 'kowalski',  title: 'Kowalski Dental — reminder automation',    stage: 'lost',      value: 60000,   owner: 'human:sam',   daysAgo: 8 },
+  { contact: 'petrova',   title: 'Petrova Analytics — starter tier',         stage: 'lost',      value: 30000,   owner: 'agent:sales', daysAgo: 12 },
+];
+
+const INTERACTIONS = [
+  { contact: 'decker',    agent: 'support',        channel: 'chat',   summary: 'Inbound chat: asked whether freight TMS integration is supported; docs link sent, contact created.', daysAgo: 0.2 },
+  { contact: 'rivera',    agent: 'workflow',       channel: 'system', summary: 'Website form submission ingested; contact record created and queued for qualification.', daysAgo: 1 },
+  { contact: 'hughes',    agent: 'workflow',       channel: 'system', summary: 'Inbound email parsed; dealership group with 6 locations; queued for qualification.', daysAgo: 1 },
+  { contact: 'whitfield', agent: 'sales',          channel: 'email',  summary: 'Sent revised proposal with fleet-size pricing tier and Q3 implementation timeline.', daysAgo: 1.5 },
+  { contact: 'bell',      agent: 'voice',          channel: 'call',   summary: 'Discovery call transcribed: 12 attorneys, intake handled manually by 2 paralegals; pain confirmed.', daysAgo: 2 },
+  { contact: 'zahra',     agent: 'sales',          channel: 'email',  summary: 'Follow-up sent to ops director with no-show cost calculator attached.', daysAgo: 2 },
+  { contact: 'ortiz',     agent: 'workflow',       channel: 'system', summary: 'Website form submission ingested; 300-unit portfolio mentioned in message field.', daysAgo: 2 },
+  { contact: 'tan',       agent: 'support',        channel: 'ticket', summary: 'Pilot-scoping question answered: ticket triage volume estimated at 900/month.', daysAgo: 2.5 },
+  { contact: 'okafor',    agent: 'voice',          channel: 'call',   summary: 'Qualification call: 3 warehouses, stockouts twice a month, spreadsheet-based tracking today.', daysAgo: 3 },
+  { contact: 'haddad',    agent: 'sales',          channel: 'email',  summary: 'Sent comparison sheet against incumbent vendor; flagged customs-form templates as differentiator.', daysAgo: 3 },
+  { contact: 'yamada',    agent: 'workflow',       channel: 'system', summary: 'Website form submission ingested; CNC shop, quoting workflow mentioned.', daysAgo: 3 },
+  { contact: 'ross',      agent: 'sales',          channel: 'email',  summary: 'Second-touch email replied to; asked for case studies in professional services.', daysAgo: 4 },
+  { contact: 'whitfield', agent: 'voice',          channel: 'call',   summary: 'Pricing call transcribed: CFO joined; asked about per-truck vs flat pricing.', daysAgo: 4 },
+  { contact: 'nair',      agent: 'sales',          channel: 'email',  summary: 'White-label terms outline sent; awaiting company registration details.', daysAgo: 5 },
+  { contact: 'bell',      agent: 'sales',          channel: 'email',  summary: 'Proposal delivered: intake automation, conflict-check integration, 6-week rollout.', daysAgo: 5 },
+  { contact: 'kowalski',  agent: 'sales',          channel: 'email',  summary: 'Final follow-up sent after 3 unanswered touches; deal moved to lost per playbook.', daysAgo: 6 },
+  { contact: 'tan',       agent: 'sales',          channel: 'email',  summary: 'Pilot proposal sent: 30-day support triage pilot, success metric = first-response time.', daysAgo: 6 },
+  { contact: 'zahra',     agent: 'voice',          channel: 'call',   summary: 'Intro call transcribed: 3 clinics, ~18% no-show rate, reminder calls done manually.', daysAgo: 6 },
+  { contact: 'okafor',    agent: 'support',        channel: 'chat',   summary: 'Webinar follow-up chat: asked about supplier lead-time modelling; answered with docs.', daysAgo: 7 },
+  { contact: 'haddad',    agent: 'voice',          channel: 'call',   summary: 'Referral intro call: currently 20h/week on customs paperwork across 2 staff.', daysAgo: 7 },
+  { contact: 'mendes',    agent: 'support',        channel: 'ticket', summary: 'Customer ticket resolved: export format question; satisfaction 5/5.', daysAgo: 8 },
+  { contact: 'ross',      agent: 'sales',          channel: 'email',  summary: 'Cold sequence step 2 delivered; open tracked, no reply.', daysAgo: 9 },
+  { contact: 'nair',      agent: 'sales',          channel: 'email',  summary: 'LinkedIn conversation moved to email; discovery questions sent.', daysAgo: 9 },
+  { contact: 'chen',      agent: 'support',        channel: 'chat',   summary: 'Customer chat: asked about adding second workspace; expansion opportunity flagged to sales.', daysAgo: 10 },
+  { contact: 'kowalski',  agent: 'sales',          channel: 'email',  summary: 'Cold sequence step 3 delivered; opened twice, no reply.', daysAgo: 11 },
+  { contact: 'whitfield', agent: 'workflow',       channel: 'system', summary: 'Demo request form ingested; routed to sales with high-priority flag (fleet >25).', daysAgo: 12 },
+  { contact: 'sorensen',  agent: 'voice',          channel: 'call',   summary: 'Discovery call transcribed: needs are seasonal-labor scheduling, outside current suite scope.', daysAgo: 13 },
+  { contact: 'petrova',   agent: 'voice',          channel: 'call',   summary: 'Discovery call transcribed: academic project, no commercial budget.', daysAgo: 13 },
+  { contact: 'mendes',    agent: 'sales',          channel: 'email',  summary: 'Contract signed and countersigned; onboarding kickoff scheduled.', daysAgo: 18 },
+  { contact: 'chen',      agent: 'sales',          channel: 'email',  summary: 'Annual plan agreement signed; referred Bell & Harmon Legal same week.', daysAgo: 21 },
+];
+
+const AGENT_ACTIONS = [
+  { agent: 'support',        action: 'create_contact',    targetType: 'contact', contact: 'decker',    detail: { source: 'inbound_chat' }, daysAgo: 0.2 },
+  { agent: 'workflow',       action: 'create_contact',    targetType: 'contact', contact: 'rivera',    detail: { source: 'website_form' }, daysAgo: 1 },
+  { agent: 'workflow',       action: 'create_contact',    targetType: 'contact', contact: 'hughes',    detail: { source: 'inbound_email' }, daysAgo: 1 },
+  { agent: 'sales',          action: 'log_interaction',   targetType: 'contact', contact: 'whitfield', detail: { channel: 'email', type: 'proposal_followup' }, daysAgo: 1.5 },
+  { agent: 'voice',          action: 'log_interaction',   targetType: 'contact', contact: 'bell',      detail: { channel: 'call', duration_min: 26 }, daysAgo: 2 },
+  { agent: 'workflow',       action: 'create_contact',    targetType: 'contact', contact: 'ortiz',     detail: { source: 'website_form' }, daysAgo: 2 },
+  { agent: 'sales',          action: 'update_deal_stage', targetType: 'deal',    contact: 'haddad',    detail: { from: 'qualified', to: 'proposal' }, daysAgo: 4 },
+  { agent: 'sales',          action: 'update_deal_stage', targetType: 'deal',    contact: 'whitfield', detail: { from: 'qualified', to: 'proposal' }, daysAgo: 6 },
+  { agent: 'lead_qualifier', action: 'score_contact',     targetType: 'contact', contact: 'zahra',     detail: { score: 69, model: 'heuristic-v1' }, daysAgo: 6 },
+  { agent: 'sales',          action: 'update_deal_stage', targetType: 'deal',    contact: 'kowalski',  detail: { from: 'contacted', to: 'lost', rule: '3 unanswered touches' }, daysAgo: 6 },
+  { agent: 'lead_qualifier', action: 'score_contact',     targetType: 'contact', contact: 'haddad',    detail: { score: 74, model: 'heuristic-v1' }, daysAgo: 7 },
+  { agent: 'lead_qualifier', action: 'score_contact',     targetType: 'contact', contact: 'okafor',    detail: { score: 78, model: 'heuristic-v1' }, daysAgo: 8 },
+  { agent: 'lead_qualifier', action: 'score_contact',     targetType: 'contact', contact: 'tan',       detail: { score: 83, model: 'heuristic-v1' }, daysAgo: 9 },
+  { agent: 'lead_qualifier', action: 'score_contact',     targetType: 'contact', contact: 'bell',      detail: { score: 91, model: 'heuristic-v1' }, daysAgo: 10 },
+  { agent: 'lead_qualifier', action: 'score_contact',     targetType: 'contact', contact: 'whitfield', detail: { score: 86, model: 'heuristic-v1' }, daysAgo: 12 },
+  { agent: 'lead_qualifier', action: 'disqualify_contact', targetType: 'contact', contact: 'petrova',  detail: { score: 18, rule: 'no_budget' }, daysAgo: 13 },
+];
+
+module.exports = { CONTACTS, DEALS, INTERACTIONS, AGENT_ACTIONS };

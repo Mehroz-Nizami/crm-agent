@@ -131,6 +131,7 @@ async function init() {
 }
 
 async function seedDemoTenant() {
+  const { CONTACTS, DEALS, INTERACTIONS, AGENT_ACTIONS } = require('./seed-data');
   const tenantId = newId('t');
   const apiKey = randomKey();
   await db.run('INSERT INTO tenants (id, name, api_key) VALUES (?, ?, ?)', [
@@ -145,28 +146,44 @@ async function seedDemoTenant() {
     [newId('u'), tenantId, 'demo@auberix.test', passwordHash, 'owner']
   );
 
-  const c1 = newId('c');
-  const c2 = newId('c');
-  await db.run(
-    'INSERT INTO contacts (id, tenant_id, name, email, company, source, status) VALUES (?, ?, ?, ?, ?, ?, ?)',
-    [c1, tenantId, 'Alex Rivera', 'alex@example.com', 'Rivera HVAC', 'website_form', 'new']
-  );
-  await db.run(
-    'INSERT INTO contacts (id, tenant_id, name, email, company, source, status) VALUES (?, ?, ?, ?, ?, ?, ?)',
-    [c2, tenantId, 'Jamie Chen', 'jamie@example.com', 'Chen Consulting', 'referral', 'qualified']
-  );
+  const ts = (daysAgo) => new Date(Date.now() - daysAgo * 24 * 60 * 60 * 1000);
+  const contactIds = {};
 
-  await db.run(
-    'INSERT INTO deals (id, tenant_id, contact_id, title, stage, value_cents, owner) VALUES (?, ?, ?, ?, ?, ?, ?)',
-    [newId('d'), tenantId, c2, 'Chen Consulting — annual plan', 'proposal', 480000, 'agent:sales']
-  );
+  for (const c of CONTACTS) {
+    const id = newId('c');
+    contactIds[c.key] = id;
+    await db.run(
+      `INSERT INTO contacts (id, tenant_id, name, email, company, source, status, lead_score, lead_score_reason, created_at, updated_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [id, tenantId, c.name, c.email, c.company, c.source, c.status, c.score, c.reason, ts(c.daysAgo), ts(c.daysAgo)]
+    );
+  }
 
-  await db.run(
-    'INSERT INTO interactions (id, tenant_id, contact_id, agent, channel, summary) VALUES (?, ?, ?, ?, ?, ?)',
-    [newId('i'), tenantId, c1, 'lead_qualifier', 'system', 'Initial inbound form submission scored.']
-  );
+  for (const d of DEALS) {
+    await db.run(
+      `INSERT INTO deals (id, tenant_id, contact_id, title, stage, value_cents, owner, created_at, updated_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [newId('d'), tenantId, contactIds[d.contact], d.title, d.stage, d.value, d.owner, ts(d.daysAgo), ts(d.daysAgo)]
+    );
+  }
 
-  console.log('Seeded demo tenant. Login: demo@auberix.test / demo1234');
+  for (const i of INTERACTIONS) {
+    await db.run(
+      `INSERT INTO interactions (id, tenant_id, contact_id, agent, channel, summary, created_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?)`,
+      [newId('i'), tenantId, contactIds[i.contact], i.agent, i.channel, i.summary, ts(i.daysAgo)]
+    );
+  }
+
+  for (const a of AGENT_ACTIONS) {
+    await db.run(
+      `INSERT INTO agent_actions (id, tenant_id, agent, action, target_type, target_id, detail, created_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+      [newId('a'), tenantId, a.agent, a.action, a.targetType, contactIds[a.contact] || null, JSON.stringify(a.detail || {}), ts(a.daysAgo)]
+    );
+  }
+
+  console.log(`Seeded demo tenant: ${CONTACTS.length} contacts, ${DEALS.length} deals, ${INTERACTIONS.length} interactions.`);
   console.log(`Demo tenant API key (for agent-to-agent calls): ${apiKey}`);
 }
 

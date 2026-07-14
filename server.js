@@ -26,7 +26,10 @@ const ah = (fn) => (req, res, next) => fn(req, res, next).catch(next);
 // data is re-seeded on boot and on an interval. Product deployments leave
 // DEMO_MODE unset and get normal multi-tenant auth.
 if (DEMO_MODE) {
-  app.use(ah(async (req, res, next) => {
+  // API calls are transparently authenticated as the demo tenant (agents, curl,
+  // and the dashboard all just work) — but page navigation still hits the
+  // one-click welcome gate, which is the demo's hook, not a barrier.
+  app.use('/api', ah(async (req, res, next) => {
     if (!(req.session && req.session.tenantId)) {
       const u = await db.get("SELECT id, tenant_id FROM users WHERE email = 'demo@auberix.test'");
       if (u) {
@@ -71,6 +74,16 @@ async function logAction(req, action, targetType, targetId, detail) {
 
 // ---- Auth routes (human dashboard) ----
 app.post('/api/login', ah(async (req, res) => {
+  if (DEMO_MODE) {
+    // One-click demo entry: no credentials required, always the demo workspace.
+    const demoUser = await db.get("SELECT id, tenant_id FROM users WHERE email = 'demo@auberix.test'");
+    if (demoUser) {
+      req.session.userId = demoUser.id;
+      req.session.tenantId = demoUser.tenant_id;
+      return res.json({ ok: true, demo: true });
+    }
+    return res.status(500).json({ error: 'Demo tenant missing' });
+  }
   const { email, password } = req.body || {};
   if (!email || !password) return res.status(400).json({ error: 'email and password required' });
   const user = await db.get('SELECT * FROM users WHERE email = ?', [email]);
@@ -84,6 +97,10 @@ app.post('/api/login', ah(async (req, res) => {
 
 app.post('/api/logout', (req, res) => {
   req.session.destroy(() => res.json({ ok: true }));
+});
+
+app.get('/api/config', (req, res) => {
+  res.json({ demo: DEMO_MODE });
 });
 
 app.get('/api/session', (req, res) => {
@@ -189,6 +206,64 @@ app.get('/api/agent-actions', resolveTenant, ah(async (req, res) => {
   res.json(await db.all('SELECT * FROM agent_actions WHERE tenant_id = ? ORDER BY created_at DESC LIMIT 200', [req.tenantId]));
 }));
 
+
+// ---- Lead Qualifier agent ----
+// Scores every unscored contact through the same attribution path a standalone
+// agent would use: score written to the contact, a system interaction logged,
+// and an agent_actions audit entry attributed to 'lead_qualifier'.
+function scoreLead(contact, interactionCount) {
+  let score = 30;
+  const reasons = [];
+  const sourceWeights = {
+    referral: [25, 'referral source'],
+    website_form: [20, 'inbound demo/website request'],
+    webinar: [15, 'webinar attendee'],
+    inbound_email: [15, 'inbound email'],
+    linkedin: [8, 'social outreach engagement'],
+    cold_outreach: [0, null],
+  };
+  const [w, label] = sourceWeights[contact.source] || [5, null];
+  score += w;
+  if (label) reasons.push(label);
+  if (contact.company) { score += 10; reasons.push('company identified'); }
+  if (contact.email) { score += 5; }
+  const engagement = Math.min(interactionCount * 4, 20);
+  if (engagement > 0) { score += engagement; reasons.push(`${interactionCount} recorded touchpoint${interactionCount === 1 ? '' : 's'}`); }
+  if (contact.status === 'contacted') { score += 5; reasons.push('already in conversation'); }
+  score = Math.max(5, Math.min(95, score));
+  const reason = 'Auto-scored: ' + (reasons.length ? reasons.join('; ') : 'limited signals; needs human review');
+  return { score, reason };
+}
+
+app.post('/api/agents/lead-qualifier/run', resolveTenant, ah(async (req, res) => {
+  const unscored = await db.all(
+    'SELECT * FROM contacts WHERE tenant_id = ? AND lead_score IS NULL ORDER BY created_at',
+    [req.tenantId]
+  );
+  const results = [];
+  for (const contact of unscored) {
+    const { c: interactionCount } = await db.get(
+      'SELECT COUNT(*)::int AS c FROM interactions WHERE tenant_id = ? AND contact_id = ?',
+      [req.tenantId, contact.id]
+    );
+    const { score, reason } = scoreLead(contact, interactionCount);
+    await db.run(
+      'UPDATE contacts SET lead_score = ?, lead_score_reason = ?, updated_at = now() WHERE id = ? AND tenant_id = ?',
+      [score, reason, contact.id, req.tenantId]
+    );
+    await db.run(
+      'INSERT INTO interactions (id, tenant_id, contact_id, agent, channel, summary) VALUES (?, ?, ?, ?, ?, ?)',
+      [newId('i'), req.tenantId, contact.id, 'lead_qualifier', 'system', `Lead scored ${score}/100 — ${reason}`]
+    );
+    await db.run(
+      'INSERT INTO agent_actions (id, tenant_id, agent, action, target_type, target_id, detail) VALUES (?, ?, ?, ?, ?, ?, ?)',
+      [newId('a'), req.tenantId, 'lead_qualifier', 'score_contact', 'contact', contact.id, JSON.stringify({ score, model: 'heuristic-v1', triggered_by: req.actor.type })]
+    );
+    results.push({ id: contact.id, name: contact.name, company: contact.company, score, reason });
+  }
+  res.json({ scored: results.length, results });
+}));
+
 // ---- Export (CSV, on-request — human session only, not agent API key) ----
 function toCsv(rows) {
   if (rows.length === 0) return '';
@@ -214,7 +289,7 @@ app.get('/api/export/:table.csv', ah(async (req, res) => {
 }));
 
 // ---- Static frontend ----
-app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.static(path.join(__dirname, 'public'), { index: false }));
 
 app.get('/', (req, res) => {
   if (!(req.session && req.session.tenantId)) return res.redirect('/login.html');

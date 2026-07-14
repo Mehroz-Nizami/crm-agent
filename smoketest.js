@@ -39,7 +39,8 @@ async function main() {
   };
 
   require('./server.js');
-  await new Promise((r) => setTimeout(r, 300)); // let start() finish awaiting init()
+  // Poll until start() finishes (richer seed data takes >300ms through pg-mem).
+  for (let i = 0; i < 100 && !capturedApp; i++) await new Promise((r) => setTimeout(r, 100));
   express.application.listen = originalListen;
   assert(capturedApp, 'server app should have been captured');
   const app = capturedApp;
@@ -68,16 +69,20 @@ async function main() {
   // 4. Seeded data visible via session
   res = await agent.get('/api/contacts');
   assert.strictEqual(res.status, 200);
-  assert.strictEqual(res.body.length, 2);
+  const { CONTACTS } = require('./seed-data');
+  assert.strictEqual(res.body.length, CONTACTS.length);
   console.log('✓ session-scoped GET /api/contacts returns seeded rows');
 
   // 5. Create a contact via session (human path — should NOT hit agent_actions)
+  res = await agent.get('/api/agent-actions');
+  const auditBaseline = res.body.length; // seed data ships with audit history
+
   res = await agent.post('/api/contacts').send({ name: 'Human-added Contact', source: 'manual' });
   assert.strictEqual(res.status, 200);
   const humanContactId = res.body.id;
 
   res = await agent.get('/api/agent-actions');
-  assert.strictEqual(res.body.length, 0, 'human session writes should not appear in agent_actions');
+  assert.strictEqual(res.body.length, auditBaseline, 'human session writes should not appear in agent_actions');
   console.log('✓ human session write correctly excluded from agent_actions audit log');
 
   // 6. Same write via API key (agent path) — SHOULD hit agent_actions
@@ -90,7 +95,7 @@ async function main() {
   const agentContactId = res.body.id;
 
   res = await request(app).get('/api/agent-actions').set('x-api-key', tenant.api_key);
-  assert.strictEqual(res.body.length, 1);
+  assert.strictEqual(res.body.length, auditBaseline + 1);
   assert.strictEqual(res.body[0].agent, 'lead_qualifier');
   assert.strictEqual(res.body[0].action, 'create_contact');
   console.log('✓ agent (API key) write correctly logged to agent_actions with agent name attributed');
